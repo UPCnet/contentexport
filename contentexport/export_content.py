@@ -15,7 +15,19 @@ TYPES_TO_EXPORT = [
     "News Item",
     "Topic",
     "Collection",
+    "EasyForm",
+    "Banner",
+    "BannerContainer",
+    "genweb.upc.documentimage",
+    "genweb.upc.subhome",
+    "LIF",
+    "LRF",
+    "Logos_Container",
+    "Logos_Footer",
+    "packet",
 ]
+
+PATH = ''
 
 # Content for test-migrations
 PATHS_TO_EXPORT = []
@@ -35,6 +47,7 @@ class CustomExportContent(ExportContent):
     }
 
     DROP_PATHS = [
+        PATH + '/templates',
     ]
 
     DROP_UIDS = [

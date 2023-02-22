@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 TYPES_TO_EXPORT = []
-
+PATH = ''
 
 class ExportAll(BrowserView):
 
@@ -29,8 +29,9 @@ class ExportAll(BrowserView):
         logger.info("Start {}".format(export_name))
         view = api.content.get_view(export_name, portal, request)
         exported_types = TYPES_TO_EXPORT
+        PATH = "/".join(portal.getPhysicalPath())
         request.form["form.submitted"] = True
-        view(portal_type=exported_types, include_blobs=2, download_to_server=True)
+        view(portal_type=exported_types, include_blobs=2, download_to_server=True, path=PATH)
         logger.info("Finished {}".format(export_name))
 
         other_exports = [
