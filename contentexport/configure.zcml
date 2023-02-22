@@ -20,6 +20,23 @@
       />
 
   <browser:page
+      name="export_settings"
+      for="zope.interface.Interface"
+      class=".export_settings.ExportSettings"
+      layer="contentexport.interfaces.IContentexportLayer"
+      permission="cmf.ManagePortal"
+      />
+ 
+  <browser:page
+      name="export_controlpanels"
+      for="zope.interface.Interface"
+      class=".export_controlpanels.ExportControlpanels"
+      layer="contentexport.interfaces.IContentexportLayer"
+      permission="cmf.ManagePortal"
+      />
+
+
+  <browser:page
       name="export_all"
       for="zope.interface.Interface"
       class=".views.ExportAll"
