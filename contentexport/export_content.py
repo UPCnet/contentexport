@@ -71,3 +71,34 @@ class CustomExportContent(ExportContent):
         Return None if you want to skip this particular object.
         """
         return item
+
+    def export_revisions(self, item, obj):
+        if not self.include_revisions:
+            return item
+        try:
+            repo_tool = api.portal.get_tool("portal_repository")
+            history_metadata = repo_tool.getHistoryMetadata(obj)
+            serializer = getMultiAdapter((obj, self.request), ISerializeToJson)
+            content_history_viewlet = ContentHistoryViewlet(obj, self.request, None, None)
+            content_history_viewlet.navigation_root_url = ""
+            content_history_viewlet.site_url = ""
+            full_history = content_history_viewlet.fullHistory() or []
+            history = [i for i in full_history if i["type"] == "versioning"]
+            if not history or len(history) == 1:
+                return item
+            item["exportimport.versions"] = {}
+            # don't export the current version again
+            for history_item in history[1:]:
+                version_id = history_item["version_id"]
+                item_version = serializer(include_items=False, version=version_id)
+                item_version = self.update_data_for_migration(item_version, obj)
+                item["exportimport.versions"][version_id] = item_version
+                # inject metadata (missing for Archetypes content):
+                comment = history_metadata.retrieve(version_id)["metadata"]["sys_metadata"]["comment"]
+                if comment and comment != item["exportimport.versions"][version_id].get("changeNote"):
+                    item["exportimport.versions"][version_id]["changeNote"] = comment
+            # current changenote
+            item["changeNote"] = history_metadata.retrieve(-1)["metadata"]["sys_metadata"]["comment"]
+            return item
+        except:
+            return item
