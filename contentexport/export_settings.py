@@ -7,6 +7,7 @@ from plone.restapi.serializer.converters import json_compatible
 
 logger = logging.getLogger(__name__)
 
+#No lo utilizo es un ejemplo de Philip Bauer
 class ExportSettings(BaseExport):
     """Export various settings for haiku sites
     """
