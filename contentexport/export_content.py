@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 from collective.exportimport.export_content import ExportContent
+from zope.annotation.interfaces import IAnnotations
+from plone.restapi.interfaces import IJsonCompatible
 
 import logging
 
@@ -34,7 +36,22 @@ PATHS_TO_EXPORT = []
 
 MARKER_INTERFACES_TO_EXPORT = []
 
-ANNOTATIONS_TO_EXPORT = []
+ANNOTATIONS_TO_EXPORT = [
+    "genweb.portlets.span.genweb.portlets.HomePortletManager1",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager2",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager3",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager4",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager5",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager6",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager7",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager8",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager9",
+    "genweb.portlets.span.genweb.portlets.HomePortletManager10",
+    "genweb.core.important",
+    "genweb.packets.fields",
+    "genweb.packets.type",
+    "genweb.packets.mapui",
+]
 
 ANNOTATIONS_KEY = "exportimport.annotations"
 
@@ -70,6 +87,18 @@ class CustomExportContent(ExportContent):
         """Used this to modify the serialized data.
         Return None if you want to skip this particular object.
         """
+        item = self.export_annotations(item, obj)
+        return item
+
+    def export_annotations(self, item, obj):
+        results = {}
+        annotations = IAnnotations(obj)
+        for key in ANNOTATIONS_TO_EXPORT:
+            data = annotations.get(key)
+            if data:
+                results[key] = IJsonCompatible(data, None)
+        if results:
+            item[ANNOTATIONS_KEY] = results
         return item
 
     def export_revisions(self, item, obj):
