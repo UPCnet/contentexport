@@ -65,6 +65,8 @@ class CustomExportContent(ExportContent):
 
     DROP_PATHS = [
         PATH + '/templates',
+        PATH + '/es/shared',
+        PATH + '/en/shared',
     ]
 
     DROP_UIDS = [
