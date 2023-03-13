@@ -49,8 +49,8 @@ class ExportControlpanels(BaseExport):
         controlpanel["genweb6.core.controlpanels.footer.IFooterSettings"]=dict(signatura_ca=gwsettings.signatura_unitat_ca,
                                                                                signatura_es=gwsettings.signatura_unitat_es,
                                                                                signatura_en=gwsettings.signatura_unitat_en)
-        controlpanel["genweb6.core.controlpanels.header.IHeaderSettings"]=dict(main_hero_style='text-hero' if gwsettings.treu_imatge_capsalera == 'True' else 'image-hero',
-                                                                               content_hero_style='text-hero' if gwsettings.treu_imatge_capsalera == 'True' else 'image-hero',
+        controlpanel["genweb6.core.controlpanels.header.IHeaderSettings"]=dict(main_hero_style='text-hero' if gwsettings.treu_imatge_capsalera else 'image-hero',
+                                                                               content_hero_style='text-hero' if gwsettings.treu_imatge_capsalera else 'image-hero',
                                                                                html_title_ca=gwsettings.html_title_ca,
                                                                                html_title_es=gwsettings.html_title_es,
                                                                                html_title_en=gwsettings.html_title_en,
