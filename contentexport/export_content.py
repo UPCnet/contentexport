@@ -3,6 +3,39 @@ from collective.exportimport.export_content import ExportContent
 from zope.annotation.interfaces import IAnnotations
 from plone.restapi.interfaces import IJsonCompatible
 
+from App.config import getConfiguration
+from collective.exportimport import _
+from collective.exportimport import config
+from collective.exportimport.interfaces import IBase64BlobsMarker
+from collective.exportimport.interfaces import IMigrationMarker
+from collective.exportimport.interfaces import IPathBlobsMarker
+from collective.exportimport.interfaces import IRawRichTextMarker
+from operator import itemgetter
+from plone import api
+from plone.app.layout.viewlets.content import ContentHistoryViewlet
+from plone.i18n.normalizer.interfaces import IIDNormalizer
+from plone.restapi.interfaces import ISerializeToJson
+from plone.restapi.serializer.converters import json_compatible
+from plone.uuid.interfaces import IUUID
+from Products.CMFPlone.interfaces.constrains import ENABLED
+from Products.CMFPlone.interfaces.constrains import ISelectableConstrainTypes
+from Products.CMFPlone.utils import safe_unicode
+from Products.Five import BrowserView
+from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from zope.component import getMultiAdapter
+from zope.component import getUtility
+from zope.i18n import translate
+from zope.interface import alsoProvides
+from zope.interface import noLongerProvides
+from zope.schema import getFields
+
+import json
+import logging
+import os
+import pkg_resources
+import six
+import tempfile
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -71,6 +104,151 @@ class CustomExportContent(ExportContent):
 
     DROP_UIDS = [
     ]
+
+    def __call__(
+        self,
+        portal_type=None,
+        path=None,
+        depth=-1,
+        include_blobs=1,
+        download_to_server=False,
+        migration=True,
+        include_revisions=False,
+    ):
+        self.portal_type = portal_type or []
+        if isinstance(self.portal_type, str):
+            self.portal_type = [self.portal_type]
+        self.migration = migration
+        self.path = path or "/".join(self.context.getPhysicalPath())
+
+        self.depth = int(depth)
+        self.depth_options = (
+            ("-1", _(u"unlimited")),
+            ("0", "0"),
+            ("1", "1"),
+            ("2", "2"),
+            ("3", "3"),
+            ("4", "4"),
+            ("5", "5"),
+            ("6", "6"),
+            ("7", "7"),
+            ("8", "8"),
+            ("9", "9"),
+            ("10", "10"),
+        )
+        self.include_blobs = int(include_blobs)
+        self.include_blobs_options = (
+            ("0", _(u"as download urls")),
+            ("1", _(u"as base-64 encoded strings")),
+            ("2", _(u"as blob paths")),
+        )
+        self.include_revisions = include_revisions
+
+        self.update()
+
+        if not self.request.form.get("form.submitted", False):
+            return self.template()
+
+        if not self.portal_type:
+            api.portal.show_message(_(u"Select at least one type to export"), self.request)
+            return self.template()
+
+        if self.include_blobs == 1:
+            # Add marker-interface to request to use our custom serializers
+            alsoProvides(self.request, IBase64BlobsMarker)
+        elif self.include_blobs == 2:
+            # Add marker interface to export blob paths
+            alsoProvides(self.request, IPathBlobsMarker)
+        else:
+            # Use the default plone.restapi serializer,
+            # which gives a download url.
+            pass
+
+        if self.migration:
+            # Add marker-interface to request to use custom serializers
+            alsoProvides(self.request, IMigrationMarker)
+
+        # to get a useful filename...
+        if self.portal_type and len(self.portal_type) == 1:
+            filename = self.portal_type[0]
+        else:
+            filename = self.path.split("/")[-1]
+        filename = "{}.json".format(filename)
+
+        content_generator = self.export_content()
+
+        number = 0
+        if download_to_server:
+            directory = config.CENTRAL_DIRECTORY
+            if directory:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                    logger.info("Created central export/import directory %s", directory)
+            else:
+                cfg = getConfiguration()
+                #directory = cfg.clienthome
+                portal = api.portal.get()
+                directory_import = cfg.clienthome + "/import"
+                directory = cfg.clienthome + "/import/" + portal.id
+                if directory:
+                    if not os.path.exists(directory):
+                        os.makedirs(directory)
+                        logger.info("Created central export/import directory %s", directory)
+
+            import ipdb; ipdb.set_trace()
+            filepath = os.path.join(directory, filename)
+            with open(filepath, "w") as f:
+                self.start()
+                for number, datum in enumerate(content_generator, start=1):
+                    if number == 1:
+                        f.write("[")
+                    else:
+                        f.write(",")
+                    json.dump(datum, f, sort_keys=True, indent=4)
+                if number:
+                    f.write("]")
+            msg = _(u"Exported {} items ({}) as {} to {}").format(
+                number, ", ".join(self.portal_type), filename, filepath
+            )
+            logger.info(msg)
+            api.portal.show_message(msg, self.request)
+
+            if self.include_blobs == 1:
+                # remove marker interface
+                noLongerProvides(self.request, IBase64BlobsMarker)
+            elif self.include_blobs == 2:
+                noLongerProvides(self.request, IPathBlobsMarker)
+            self.finish()
+            self.request.response.redirect(self.request["ACTUAL_URL"])
+        else:
+            with tempfile.TemporaryFile(mode="w+") as f:
+                self.start()
+                for number, datum in enumerate(content_generator, start=1):
+                    if number == 1:
+                        f.write("[")
+                    else:
+                        f.write(",")
+                    json.dump(datum, f, sort_keys=True, indent=4)
+                if number:
+                    f.write("]")
+                msg = _(u"Exported {} {}").format(number, self.portal_type)
+                logger.info(msg)
+                api.portal.show_message(msg, self.request)
+                response = self.request.response
+                response.setHeader("content-type", "application/json")
+                response.setHeader("content-length", f.tell())
+                response.setHeader(
+                    "content-disposition",
+                    'attachment; filename="{0}"'.format(filename),
+                )
+                if self.include_blobs == 1:
+                    # remove marker interface
+                    noLongerProvides(self.request, IBase64BlobsMarker)
+                elif self.include_blobs == 2:
+                    noLongerProvides(self.request, IPathBlobsMarker)
+                f.seek(0)
+                self.finish()
+                return response.write(safe_bytes(f.read()))
 
     def update_query(self, query):
         return query
