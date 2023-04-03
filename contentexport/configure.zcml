@@ -3,6 +3,8 @@
            xmlns:zcml="http://namespaces.zope.org/zcml"
            xmlns:browser="http://namespaces.zope.org/browser">
 
+  <include file="patches.zcml" />
+
   <genericsetup:registerProfile
       name="default"
       title="Custom content-export using collective.exportimport"

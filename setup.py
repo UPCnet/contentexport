@@ -15,5 +15,6 @@ setup(
     install_requires=[
         "setuptools",
         "collective.exportimport",
+        "minio",
         ],
     )
