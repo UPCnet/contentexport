@@ -195,7 +195,6 @@ class CustomExportContent(ExportContent):
                         os.makedirs(directory)
                         logger.info("Created central export/import directory %s", directory)
 
-            import ipdb; ipdb.set_trace()
             filepath = os.path.join(directory, filename)
             with open(filepath, "w") as f:
                 self.start()
