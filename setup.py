@@ -16,5 +16,6 @@ setup(
         "setuptools",
         "collective.exportimport",
         "minio",
+        "s3fs",
         ],
     )

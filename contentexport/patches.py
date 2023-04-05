@@ -1,80 +1,20 @@
 # -*- coding: utf-8 -*-
-from Acquisition import aq_base
 from App.config import getConfiguration
 from collective.exportimport import _
 from collective.exportimport import config
-from OFS.interfaces import IOrderedContainer
-from operator import itemgetter
 from plone import api
-from plone.app.discussion.interfaces import IConversation
-from plone.app.portlets.interfaces import IPortletTypeInterface
-from plone.app.redirector.interfaces import IRedirectionStorage
-from plone.app.textfield.value import RichTextValue
-from plone.app.uuid.utils import uuidToObject
-from plone.portlets.constants import CONTENT_TYPE_CATEGORY
-from plone.portlets.constants import CONTEXT_CATEGORY
-from plone.portlets.constants import GROUP_CATEGORY
-from plone.portlets.constants import USER_CATEGORY
-from plone.portlets.interfaces import ILocalPortletAssignmentManager
-from plone.portlets.interfaces import IPortletAssignmentMapping
-from plone.portlets.interfaces import IPortletAssignmentSettings
-from plone.portlets.interfaces import IPortletManager
-from plone.restapi.interfaces import ISerializeToJson
-from plone.restapi.serializer.converters import json_compatible
-from plone.uuid.interfaces import IUUID
-from Products.CMFCore.interfaces import IContentish
-from Products.CMFCore.utils import getToolByName
-from Products.CMFPlone.interfaces import IPloneSiteRoot
-from Products.Five import BrowserView
-from zope.component import getMultiAdapter
-from zope.component import getUtilitiesFor
-from zope.component import getUtility
-from zope.component import queryMultiAdapter
-from zope.component import queryUtility
-from zope.interface import providedBy
-
-from minio import Minio
-from minio.error import ResponseError
 
 import json
 import logging
 import os
-import pkg_resources
-import six
-
-try:
-    pkg_resources.get_distribution("Products.Archetypes")
-except pkg_resources.DistributionNotFound:
-    HAS_AT = False
-else:
-    HAS_AT = True
-
-try:
-    pkg_resources.get_distribution("zc.relation")
-except pkg_resources.DistributionNotFound:
-    HAS_DX = False
-else:
-    HAS_DX = True
-
-try:
-    pkg_resources.get_distribution("z3c.relationfield")
-except pkg_resources.DistributionNotFound:
-    RelationValue = None
-else:
-    from z3c.relationfield import RelationValue
-
-try:
-    pam_version = pkg_resources.get_distribution("plone.app.multilingual")
-    if pam_version.version < "2.0.0":
-        IS_PAM_1 = True
-    else:
-        IS_PAM_1 = False
-except pkg_resources.DistributionNotFound:
-    IS_PAM_1 = False
 
 logger = logging.getLogger(__name__)
 
-PORTAL_PLACEHOLDER = "<Portal>"
+from minio import Minio
+from minio.error import ResponseError
+import s3fs
+import boto3
+
 
 def download(self, data):
     filename = u"{}.json".format(self.__name__)
@@ -92,7 +32,13 @@ def download(self, data):
                 logger.info("Created central export/import directory %s", directory)
         else:
             cfg = getConfiguration()
-            directory = cfg.clienthome
+            portal = api.portal.get()
+            directory_import = cfg.clienthome + "/import"
+            directory = cfg.clienthome + "/import/" + portal.id
+            if directory:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                    logger.info("Created central export/import directory %s", directory)
 
         filepath = os.path.join(directory, filename)
         with open(filepath, "w") as f:
@@ -105,6 +51,26 @@ def download(self, data):
         ACCES_KEY = os.environ.get('access_key', False)
         SECRET_KEY = os.environ.get('secret_key', False)
 
+        # import ipdb; ipdb.set_trace()
+
+        # s3_client = boto3.client(
+        #                 'minio.upc.edu',
+        #                 aws_access_key_id=ACCES_KEY,
+        #                 aws_secret_access_key=SECRET_KEY,
+        #                 verify=False,
+        #                 config=boto3.session.Config(signature_version='s3v4'),
+        #                 region_name='us-east-1'
+        #             )
+
+        # response = s3_client.list_objects(Bucket='bucket_name', Prefix=key)
+        # boto3.resource(
+        #     "s3",
+        #     endpoint_url="minio.upc.edu",
+        #     aws_access_key_id=ACCES_KEY,
+        #     aws_secret_access_key=SECRET_KEY,
+        #     verify=False
+        # )
+
         # Connection Minio S3
         client = Minio(
         "minio.upc.edu",
@@ -113,6 +79,20 @@ def download(self, data):
         secure=False,
         region='us-east-1'
         )
+
+
+        # Connection S3FS Minio
+        fs = s3fs.S3FileSystem(
+            anon=False,
+            key=ACCES_KEY,
+            secret=SECRET_KEY,
+            use_ssl=False,
+            client_kwargs={
+                'endpoint_url': "http://minio.upc.edu" # tried 127.0.0.1:9000 with no success
+            }
+        )
+
+        #s3 = fs.connect()
 
         # Create client with custom HTTP client using proxy server.
         # import urllib3
@@ -136,7 +116,7 @@ def download(self, data):
 
         # signature_v4 = True
         bucket_name = "genweb6"
-        import ipdb; ipdb.set_trace()
+
         # try:
         #     import ipdb; ipdb.set_trace()
         #     import urllib3.contrib.pyopenssl
@@ -145,7 +125,8 @@ def download(self, data):
         #     pass
 
         #found = client.bucket_exists(bucket_name)
-    
+        found = fs.ls(bucket_name)
+        valor = fs.s3.get_object(Bucket=bucket_name, Key='pruebas/export_settings.json')
 
         results = False
 
@@ -167,15 +148,21 @@ def download(self, data):
             #     print(obj.bucket_name, obj.object_name, obj.last_modified, \
             #         obj.etag, obj.size, obj.content_type)
             # Put an object 'pumaserver_debug.log' with contents from 'pumaserver_debug.log'.
-            try:
-                client.fput_object("genweb6", str(portal.id + '/' + filename), str(filepath))
-            except ResponseError as err:
-                print(err)
+            # try:
+            #     client.fput_object("genweb6", str(portal.id + '/' + filename), str(filepath))
+            # except ResponseError as err:
+            #     print(err)
             # Put a file
             # file_stat = os.stat(filepath)
             # with open(filepath, 'rb') as file_data:
             #     client.put_object(bucket_name, filepath, file_data, file_stat.st_size)
-            # file_data.close()               
+            # file_data.close()
+            # with fs.open('genweb6/new-file', 'wb') as f: 
+            #     f.write(2*2**20 * b'a')
+            #     f.write(2*2**20 * b'a')
+            # fichero = fs.du('genweb6/new-file')
+            pass
+
         
         msg = _(u"Exported to {}").format(filepath)
         logger.info(msg)
