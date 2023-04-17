@@ -83,10 +83,30 @@ class ExportControlpanels(BaseExport):
                                                                      webstats_js=site_props.webstats_js)
         #@@recaptcha-settings
         recaptchasettings = getUtility(IRegistry).forInterface(IReCaptchaSettings)
-        controlpanel["plone.formwidget.recaptcha.interfaces.IReCaptchaSettings"]=dict(public_key=recaptchasettings.public_key,
+        controlpanel["plone.formwidget.recaptcha.interfaces.IReCaptchaSettings"]=dict(center_code=recaptchasettings.public_key,
                                                                                       private_key=recaptchasettings.private_key,
                                                                                       display_theme=recaptchasettings.display_theme,
                                                                                       display_type=recaptchasettings.display_type,
                                                                                       display_size=recaptchasettings.display_size)
+
+        if "genweb.tfemarket" in results["addons"]:
+            from genweb.tfemarket.controlpanel import ITableTitulacions, ITfemarketSettings
+
+            tfesettings = getUtility(IRegistry).forInterface(ITfemarketSettings)
+            controlpanel["genweb6.tfemarket.controlpanels.tfemarket.ITfemarketSettings"]=dict(center_code=tfesettings.center_code,
+                                                                                              center_name=tfesettings.center_name,
+                                                                                              review_state=tfesettings.review_state,
+                                                                                              enroll_type=tfesettings.enroll_type,
+                                                                                              alternative_email=tfesettings.alternative_email,
+                                                                                              alternative_email_name=tfesettings.alternative_email_name,
+                                                                                              topics=tfesettings.topics,
+                                                                                              tags=tfesettings.tags,
+                                                                                              languages=tfesettings.languages,
+                                                                                              titulacions_table=tfesettings.titulacions_table,
+                                                                                              life_period=tfesettings.life_period,
+                                                                                              view_num_students=tfesettings.view_num_students,
+                                                                                              import_offers=tfesettings.import_offers,
+                                                                                              count_offers=tfesettings.count_offers)
+
         results["controlpanel"] = json_compatible(controlpanel)
         return results

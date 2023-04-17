@@ -6,7 +6,7 @@
     <include package="collective.monkeypatcher" />
 
     <monkey:patch
-        description="Upload json to Minio S3"
+        description="Upload json to folder domain"
         class="collective.exportimport.export_other.BaseExport"
         original="download"
         replacement=".patches.download"

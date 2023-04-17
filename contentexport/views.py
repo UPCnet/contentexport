@@ -45,7 +45,7 @@ class ExportAll(BrowserView):
             "export_portlets",
             "export_redirects",
             "export_settings",
-            'export_controlpanels',
+            "export_controlpanels",
         ]
         for export_name in other_exports:
             export_view = api.content.get_view(export_name, portal, request)

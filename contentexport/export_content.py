@@ -60,6 +60,9 @@ TYPES_TO_EXPORT = [
     "Logos_Container",
     "Logos_Footer",
     "packet",
+    "genweb.tfemarket.market",
+    "genweb.tfemarket.offer",
+    "genweb.tfemarket.application"
 ]
 
 PATH = ''
