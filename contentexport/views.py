@@ -46,7 +46,9 @@ class ExportAll(BrowserView):
             "export_redirects",
             "export_settings",
             "export_controlpanels",
+            "export_portalrolemanager",
         ]
+
         for export_name in other_exports:
             export_view = api.content.get_view(export_name, portal, request)
             request.form["form.submitted"] = True

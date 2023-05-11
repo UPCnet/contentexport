@@ -37,6 +37,13 @@
       permission="cmf.ManagePortal"
       />
 
+  <browser:page
+      name="export_portalrolemanager"
+      for="zope.interface.Interface"
+      class=".export_portalrolemanager.ExportPortalRoleManager"
+      layer="contentexport.interfaces.IContentexportLayer"
+      permission="cmf.ManagePortal"
+      />
 
   <browser:page
       name="export_all"
