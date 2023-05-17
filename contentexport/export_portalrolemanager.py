@@ -38,7 +38,6 @@ class ExportPortalRoleManager(BaseExport):
                 result.append(info_role_manager)
             except:
                 logger.info('HA FALLAT LA INFO DE {}'.format(role['id']))
-        import ipdb; ipdb.set_trace()
         results = result
 
         return results
