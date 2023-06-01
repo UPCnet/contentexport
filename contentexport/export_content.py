@@ -62,7 +62,8 @@ TYPES_TO_EXPORT = [
     "packet",
     "genweb.tfemarket.market",
     "genweb.tfemarket.offer",
-    "genweb.tfemarket.application"
+    "genweb.tfemarket.application",
+    "Window"
 ]
 
 PATH = ''
