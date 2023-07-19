@@ -118,6 +118,7 @@ class CustomExportContent(ExportContent):
         download_to_server=False,
         migration=True,
         include_revisions=False,
+        write_errors=False
     ):
         self.portal_type = portal_type or []
         if isinstance(self.portal_type, str):
@@ -147,6 +148,7 @@ class CustomExportContent(ExportContent):
             ("2", _(u"as blob paths")),
         )
         self.include_revisions = include_revisions
+        self.write_errors = write_errors or self.request.form.get("write_errors")
 
         self.update()
 
@@ -179,6 +181,7 @@ class CustomExportContent(ExportContent):
             filename = self.path.split("/")[-1]
         filename = "{}.json".format(filename)
 
+        self.errors = []
         content_generator = self.export_content()
 
         number = 0
