@@ -16,7 +16,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 class ExportControlpanels(BaseExport):
-    """Export various controlpanels 
+    """Export various controlpanels
     """
 
     def __call__(self, download_to_server=False):
@@ -88,6 +88,9 @@ class ExportControlpanels(BaseExport):
                                                                                       display_theme=recaptchasettings.display_theme,
                                                                                       display_type=recaptchasettings.display_type,
                                                                                       display_size=recaptchasettings.display_size)
+        #@@language-controlpanel
+        default_language = api.portal.get_default_language()
+        controlpanel["plone.app.multilingual"]=dict(default_language=default_language)
 
         if "genweb.tfemarket" in results["addons"]:
             from genweb.tfemarket.controlpanel import ITableTitulacions, ITfemarketSettings
