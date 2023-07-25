@@ -212,6 +212,10 @@ class CustomExportContent(ExportContent):
                         f.write(",")
                     json.dump(datum, f, sort_keys=True, indent=4)
                 if number:
+                    if self.errors and self.write_errors:
+                        f.write(",")
+                        errors = {"unexported_paths": self.errors}
+                        json.dump(errors, f, indent=4)
                     f.write("]")
             msg = _(u"Exported {} items ({}) as {} to {}").format(
                 number, ", ".join(self.portal_type), filename, filepath
@@ -236,6 +240,10 @@ class CustomExportContent(ExportContent):
                         f.write(",")
                     json.dump(datum, f, sort_keys=True, indent=4)
                 if number:
+                    if  self.errors and self.write_errors:
+                        f.write(",")
+                        errors = {"unexported_paths": self.errors}
+                        json.dump(errors, f, indent=4)
                     f.write("]")
                 msg = _(u"Exported {} {}").format(number, self.portal_type)
                 logger.info(msg)
