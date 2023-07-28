@@ -290,7 +290,10 @@ class CustomExportContent(ExportContent):
         for key in ANNOTATIONS_TO_EXPORT:
             data = annotations.get(key)
             if data:
-                results[key] = IJsonCompatible(data, None)
+                # Lo comento lo del IJsonCompatible porque sino
+                # i18n_message_converter plone.restapi.serializer.converter.py lo traduce y no funciona
+                #results[key] = IJsonCompatible(data, None)
+                results[key] = data
         if results:
             item[ANNOTATIONS_KEY] = results
         return item
