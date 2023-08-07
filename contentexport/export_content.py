@@ -63,7 +63,24 @@ TYPES_TO_EXPORT = [
     "genweb.tfemarket.market",
     "genweb.tfemarket.offer",
     "genweb.tfemarket.application",
-    "Window"
+    "Window",
+    "genweb.ens.acord",
+    "genweb.ens.acta_reunio",
+    "genweb.ens.carrec_upc",
+    "genweb.ens.carrec",
+    "genweb.ens.persona_directiu",
+    "genweb.ens.contenidor_ens",
+    "genweb.ens.contenidor_representants",
+    "genweb.ens.conveni",
+    "genweb.ens.document_interes",
+    "genweb.ens.escriptura_publica",
+    "genweb.ens.documentacio",
+    "genweb.ens.ens",
+    "genweb.ens.estatut",
+    "genweb.ens.organ",
+    "genweb.ens.persona_contacte",
+    "genweb.ens.representant",
+    "genweb.ens.unitat"
 ]
 
 PATH = ''
