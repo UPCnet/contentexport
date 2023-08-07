@@ -80,7 +80,8 @@ TYPES_TO_EXPORT = [
     "genweb.ens.organ",
     "genweb.ens.persona_contacte",
     "genweb.ens.representant",
-    "genweb.ens.unitat"
+    "genweb.ens.unitat",
+    "Scholarship"
 ]
 
 PATH = ''
