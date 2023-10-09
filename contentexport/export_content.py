@@ -124,6 +124,7 @@ class CustomExportContent(ExportContent):
         PATH + '/templates',
         PATH + '/es/shared',
         PATH + '/en/shared',
+        PATH + '/per_ubicar',
     ]
 
     DROP_UIDS = [
