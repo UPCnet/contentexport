@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+from collective.exportimport.export_content import safe_bytes
 from collective.exportimport.export_content import ExportContent
 from zope.annotation.interfaces import IAnnotations
 from plone.restapi.interfaces import IJsonCompatible
@@ -206,7 +207,9 @@ class CustomExportContent(ExportContent):
         content_generator = self.export_content()
 
         number = 0
-        if download_to_server:
+
+        # Export each item to a separate json-file
+        if download_to_server == 2:
             directory = config.CENTRAL_DIRECTORY
             if directory:
                 if not os.path.exists(directory):
@@ -223,6 +226,47 @@ class CustomExportContent(ExportContent):
                         os.makedirs(directory)
                         logger.info("Created central export/import directory %s", directory)
 
+            # Use the filename (Plone.json) as target for files (Plone/1.json)
+            directory = os.path.join(directory, filename[:-5])
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+                logger.info("Created directory to hold content: %s", directory)
+
+            self.start()
+            for number, datum in enumerate(content_generator, start=1):
+                filename = "{}.json".format(number)
+                filepath = os.path.join(directory, filename)
+                with open(filepath, "w") as f:
+                    json.dump(datum, f, sort_keys=True, indent=4)
+            if number:
+                if self.errors and self.write_errors:
+                    errors = {"unexported_paths": self.errors}
+                    with open(os.path.join(directory, "errors.json"), "w") as f:
+                        json.dump(errors, f, indent=4)
+            msg = _(u"Exported {} items ({}) to {} with {} errors").format(
+                number, ", ".join(self.portal_type), directory, len(self.errors)
+            )
+            logger.info(msg)
+            api.portal.show_message(msg, self.request)
+
+            if self.include_blobs == 1:
+                # remove marker interface
+                noLongerProvides(self.request, IBase64BlobsMarker)
+            elif self.include_blobs == 2:
+                noLongerProvides(self.request, IPathBlobsMarker)
+            self.finish()
+            self.request.response.redirect(self.request["ACTUAL_URL"])
+
+        # Export all items into one json-file in the filesystem
+        elif download_to_server:
+            directory = config.CENTRAL_DIRECTORY
+            if directory:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                    logger.info("Created central export/import directory %s", directory)
+            else:
+                cfg = getConfiguration()
+                directory = cfg.clienthome
             filepath = os.path.join(directory, filename)
             with open(filepath, "w") as f:
                 self.start()
@@ -238,8 +282,8 @@ class CustomExportContent(ExportContent):
                         errors = {"unexported_paths": self.errors}
                         json.dump(errors, f, indent=4)
                     f.write("]")
-            msg = _(u"Exported {} items ({}) as {} to {}").format(
-                number, ", ".join(self.portal_type), filename, filepath
+            msg = _(u"Exported {} items ({}) as {} to {} with {} errors").format(
+                number, ", ".join(self.portal_type), filename, filepath, len(self.errors)
             )
             logger.info(msg)
             api.portal.show_message(msg, self.request)
@@ -251,6 +295,8 @@ class CustomExportContent(ExportContent):
                 noLongerProvides(self.request, IPathBlobsMarker)
             self.finish()
             self.request.response.redirect(self.request["ACTUAL_URL"])
+
+        # Export as one json-file through the browser
         else:
             with tempfile.TemporaryFile(mode="w+") as f:
                 self.start()
@@ -266,7 +312,7 @@ class CustomExportContent(ExportContent):
                         errors = {"unexported_paths": self.errors}
                         json.dump(errors, f, indent=4)
                     f.write("]")
-                msg = _(u"Exported {} {}").format(number, self.portal_type)
+                msg = _(u"Exported {} {} with {} errors").format(number, self.portal_type, len(self.errors))
                 logger.info(msg)
                 api.portal.show_message(msg, self.request)
                 response = self.request.response
@@ -284,6 +330,86 @@ class CustomExportContent(ExportContent):
                 f.seek(0)
                 self.finish()
                 return response.write(safe_bytes(f.read()))
+
+        # Codigo antiguo BORRAR
+        # if download_to_server:
+        #     directory = config.CENTRAL_DIRECTORY
+        #     if directory:
+        #         if not os.path.exists(directory):
+        #             os.makedirs(directory)
+        #             logger.info("Created central export/import directory %s", directory)
+        #     else:
+        #         cfg = getConfiguration()
+        #         #directory = cfg.clienthome
+        #         portal = api.portal.get()
+        #         directory_import = cfg.clienthome + "/import"
+        #         directory = cfg.clienthome + "/import/" + portal.id
+        #         if directory:
+        #             if not os.path.exists(directory):
+        #                 os.makedirs(directory)
+        #                 logger.info("Created central export/import directory %s", directory)
+
+        #     filepath = os.path.join(directory, filename)
+        #     with open(filepath, "w") as f:
+        #         self.start()
+        #         for number, datum in enumerate(content_generator, start=1):
+        #             if number == 1:
+        #                 f.write("[")
+        #             else:
+        #                 f.write(",")
+        #             json.dump(datum, f, sort_keys=True, indent=4)
+        #         if number:
+        #             if self.errors and self.write_errors:
+        #                 f.write(",")
+        #                 errors = {"unexported_paths": self.errors}
+        #                 json.dump(errors, f, indent=4)
+        #             f.write("]")
+        #     msg = _(u"Exported {} items ({}) as {} to {}").format(
+        #         number, ", ".join(self.portal_type), filename, filepath
+        #     )
+        #     logger.info(msg)
+        #     api.portal.show_message(msg, self.request)
+
+        #     if self.include_blobs == 1:
+        #         # remove marker interface
+        #         noLongerProvides(self.request, IBase64BlobsMarker)
+        #     elif self.include_blobs == 2:
+        #         noLongerProvides(self.request, IPathBlobsMarker)
+        #     self.finish()
+        #     self.request.response.redirect(self.request["ACTUAL_URL"])
+        # else:
+        #     with tempfile.TemporaryFile(mode="w+") as f:
+        #         self.start()
+        #         for number, datum in enumerate(content_generator, start=1):
+        #             if number == 1:
+        #                 f.write("[")
+        #             else:
+        #                 f.write(",")
+        #             json.dump(datum, f, sort_keys=True, indent=4)
+        #         if number:
+        #             if  self.errors and self.write_errors:
+        #                 f.write(",")
+        #                 errors = {"unexported_paths": self.errors}
+        #                 json.dump(errors, f, indent=4)
+        #             f.write("]")
+        #         msg = _(u"Exported {} {}").format(number, self.portal_type)
+        #         logger.info(msg)
+        #         api.portal.show_message(msg, self.request)
+        #         response = self.request.response
+        #         response.setHeader("content-type", "application/json")
+        #         response.setHeader("content-length", f.tell())
+        #         response.setHeader(
+        #             "content-disposition",
+        #             'attachment; filename="{0}"'.format(filename),
+        #         )
+        #         if self.include_blobs == 1:
+        #             # remove marker interface
+        #             noLongerProvides(self.request, IBase64BlobsMarker)
+        #         elif self.include_blobs == 2:
+        #             noLongerProvides(self.request, IPathBlobsMarker)
+        #         f.seek(0)
+        #         self.finish()
+        #         return response.write(safe_bytes(f.read()))
 
     def update_query(self, query):
         return query

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collective.exportimport.export_other import safe_bytes
 from App.config import getConfiguration
 from collective.exportimport import _
 from collective.exportimport import config
