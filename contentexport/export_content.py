@@ -428,6 +428,12 @@ class CustomExportContent(ExportContent):
         """Used this to modify the serialized data.
         Return None if you want to skip this particular object.
         """
+        if obj.portal_type in ["genweb.tfemarket.market", "genweb.tfemarket.offer", "genweb.tfemarket.application"]:
+            item.update({u'creators': [it for it in obj.creators]})
+            item.update({u'contributors': [it for it in obj.contributors]})
+            item.update({u'expires': obj.expires().strftime('%Y-%m-%dT%H:%M:%S+00:00' if obj.expires else None)})
+            item.update({u'exclude_from_nav': obj.exclude_from_nav})
+
         item = self.export_annotations(item, obj)
         return item
 
