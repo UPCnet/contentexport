@@ -93,7 +93,7 @@ class ExportControlpanels(BaseExport):
         controlpanel["plone.app.multilingual"]=dict(default_language=default_language)
 
         if "genweb.tfemarket" in results["addons"]:
-            from genweb.tfemarket.controlpanel import ITableTitulacions, ITfemarketSettings
+            from genweb.tfemarket.controlpanel import ITableTitulacions, ITfemarketSettings, IBUSSOASettings, IIdentitatDigitalSettings
 
             tfesettings = getUtility(IRegistry).forInterface(ITfemarketSettings)
             controlpanel["genweb6.tfemarket.controlpanels.tfemarket.ITfemarketSettings"]=dict(center_code=tfesettings.center_code,
@@ -110,6 +110,33 @@ class ExportControlpanels(BaseExport):
                                                                                               view_num_students=tfesettings.view_num_students,
                                                                                               import_offers=tfesettings.import_offers,
                                                                                               count_offers=tfesettings.count_offers)
+            bussoasettings = getUtility(IRegistry).forInterface(IBUSSOASettings)
+            controlpanel["genweb6.upc.controlpanels.bus_soa.IBusSOASettings"]=dict(bus_url=bussoasettings.bus_url,
+                                                                                   bus_user=bussoasettings.bus_user,
+                                                                                   bus_password=bussoasettings.bus_password,
+                                                                                   bus_apikey=bussoasettings.bus_apikey)
+
+            identitatdigitalsettings = getUtility(IRegistry).forInterface(IIdentitatDigitalSettings)
+            controlpanel["genweb6.upc.controlpanels.identitat_digital.IIdentitatDigitalSettings"]=dict(identitat_url=identitatdigitalsettings.identitat_url,
+                                                                                                       identitat_apikey=identitatdigitalsettings.identitat_apikey)
+
+        if "genweb.serveistic" in results["addons"]:
+            from genweb.serveistic.controlpanel import IServeisTICFacetesControlPanelSettings, IServeisTICControlPanelSettings
+
+            serveisticsettings = getUtility(IRegistry).forInterface(IServeisTICControlPanelSettings)
+            controlpanel["genweb6.serveistic.controlpanels.serveistic.IServeisTICControlPanelSettings"]=dict(url_info_serveistic=serveisticsettings.url_info_serveistic,
+                                                                                                             show_filters=serveisticsettings.show_filters,
+                                                                                                             ws_problemes_endpoint=serveisticsettings.ws_problemes_endpoint,
+                                                                                                             ws_problemes_login_username=serveisticsettings.ws_problemes_login_username,
+                                                                                                             ws_problemes_login_password=serveisticsettings.ws_problemes_login_password,
+                                                                                                             ws_indicadors_service_id=serveisticsettings.ws_indicadors_service_id,
+                                                                                                             ws_indicadors_endpoint=serveisticsettings.ws_indicadors_endpoint,
+                                                                                                             ws_indicadors_key=serveisticsettings.ws_indicadors_key,
+                                                                                                             update_indicadors_passphrase=serveisticsettings.update_indicadors_passphrase,
+                                                                                                             ga_key_json=serveisticsettings.ga_key_json,
+                                                                                                             ga_view_id=serveisticsettings.ga_view_id)
+            facetessettings = getUtility(IRegistry).forInterface(IServeisTICFacetesControlPanelSettings)
+            controlpanel["genweb6.serveistic.controlpanels.facetes.IServeisTICFacetesControlPanelSettings"]=dict(facetes_table=facetessettings.facetes_table)
 
         results["controlpanel"] = json_compatible(controlpanel)
         return results
