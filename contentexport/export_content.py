@@ -434,6 +434,10 @@ class CustomExportContent(ExportContent):
             item.update({u'expires': obj.expires().strftime('%Y-%m-%dT%H:%M:%S+00:00' if obj.expires else None)})
             item.update({u'exclude_from_nav': obj.exclude_from_nav})
 
+        if obj.portal_type == "genweb.tfemarket.offer":
+            if item['offer_type'] == 'Projecte':
+                item['offer_type'] = u'Project'
+
         item = self.export_annotations(item, obj)
         return item
 
