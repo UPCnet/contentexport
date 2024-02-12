@@ -438,6 +438,10 @@ class CustomExportContent(ExportContent):
             if item['offer_type'] == 'Projecte':
                 item['offer_type'] = u'Project'
 
+        if obj.portal_type == "genweb.ens.ens":
+            if item['institution_type'] == None:
+                item['institution_type'] = '-'
+
         item = self.export_annotations(item, obj)
         return item
 
