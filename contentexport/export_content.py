@@ -84,7 +84,8 @@ TYPES_TO_EXPORT = [
     "genweb.ens.unitat",
     "Scholarship",
     "serveitic",
-    "notificaciotic"
+    "notificaciotic",
+    "documentrrhh"
 ]
 
 PATH = ''
@@ -178,7 +179,9 @@ class CustomExportContent(ExportContent):
             return self.template()
 
         if not self.portal_type:
-            api.portal.show_message(_(u"Select at least one type to export"), self.request)
+            api.portal.show_message(
+                _(u"Select at least one type to export"),
+                self.request)
             return self.template()
 
         if self.include_blobs == 1:
@@ -217,14 +220,15 @@ class CustomExportContent(ExportContent):
                     logger.info("Created central export/import directory %s", directory)
             else:
                 cfg = getConfiguration()
-                #directory = cfg.clienthome
+                # directory = cfg.clienthome
                 portal = api.portal.get()
                 directory_import = cfg.clienthome + "/import"
                 directory = cfg.clienthome + "/import/" + portal.id
                 if directory:
                     if not os.path.exists(directory):
                         os.makedirs(directory)
-                        logger.info("Created central export/import directory %s", directory)
+                        logger.info(
+                            "Created central export/import directory %s", directory)
 
             # Use the filename (Plone.json) as target for files (Plone/1.json)
             directory = os.path.join(directory, filename[:-5])
@@ -307,12 +311,13 @@ class CustomExportContent(ExportContent):
                         f.write(",")
                     json.dump(datum, f, sort_keys=True, indent=4)
                 if number:
-                    if  self.errors and self.write_errors:
+                    if self.errors and self.write_errors:
                         f.write(",")
                         errors = {"unexported_paths": self.errors}
                         json.dump(errors, f, indent=4)
                     f.write("]")
-                msg = _(u"Exported {} {} with {} errors").format(number, self.portal_type, len(self.errors))
+                msg = _(u"Exported {} {} with {} errors").format(
+                    number, self.portal_type, len(self.errors))
                 logger.info(msg)
                 api.portal.show_message(msg, self.request)
                 response = self.request.response
@@ -428,10 +433,13 @@ class CustomExportContent(ExportContent):
         """Used this to modify the serialized data.
         Return None if you want to skip this particular object.
         """
-        if obj.portal_type in ["genweb.tfemarket.market", "genweb.tfemarket.offer", "genweb.tfemarket.application"]:
+        if obj.portal_type in [
+            "genweb.tfemarket.market", "genweb.tfemarket.offer",
+                "genweb.tfemarket.application"]:
             item.update({u'creators': [it for it in obj.creators]})
             item.update({u'contributors': [it for it in obj.contributors]})
-            item.update({u'expires': obj.expires().strftime('%Y-%m-%dT%H:%M:%S+00:00' if obj.expires else None)})
+            item.update({u'expires': obj.expires().strftime(
+                '%Y-%m-%dT%H:%M:%S+00:00' if obj.expires else None)})
             item.update({u'exclude_from_nav': obj.exclude_from_nav})
 
         if obj.portal_type == "genweb.tfemarket.offer":
@@ -453,7 +461,7 @@ class CustomExportContent(ExportContent):
             if data:
                 # Lo comento lo del IJsonCompatible porque sino
                 # i18n_message_converter plone.restapi.serializer.converter.py lo traduce y no funciona
-                #results[key] = IJsonCompatible(data, None)
+                # results[key] = IJsonCompatible(data, None)
                 results[key] = data
         if results:
             item[ANNOTATIONS_KEY] = results
