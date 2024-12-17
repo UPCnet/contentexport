@@ -85,7 +85,13 @@ TYPES_TO_EXPORT = [
     "Scholarship",
     "serveitic",
     "notificaciotic",
-    "documentrrhh"
+    "documentrrhh",
+    "Noticia_actualidad",
+    "Flash_informativo",
+    "Docmigrat",
+    "Job_Posting",
+    "privateFolder",
+    "AppFile"
 ]
 
 PATH = ''
